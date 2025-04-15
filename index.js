@@ -1,9 +1,8 @@
-const process = require("process");
 const express = require("express");
 const http = require("http");
 const { Server } = require("socket.io");
 const cors = require("cors");
-window.process = process;
+
 
 
 const app = express();
