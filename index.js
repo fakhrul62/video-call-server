@@ -44,6 +44,10 @@ const io = require("socket.io")(server, {
         socket.to(roomID).emit("user-disconnected", socket.id);
       });
     });
+    socket.on("chat-message", ({ room, message }) => {
+      // Broadcast to all users in the room except sender
+      socket.to(room).emit("chat-message", { from: socket.id, message });
+    });
   });
 
 const PORT = process.env.PORT || 5000;
