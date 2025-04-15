@@ -10,29 +10,39 @@ app.use(cors({ origin: "*" }));
 
 const server = http.createServer(app);
 
-const io = new Server(server, {
-  cors: {
-    origin: "*",  // Allow all origins for development
-    methods: ["GET", "POST"],
-  },
-});
-
-io.on("connection", (socket) => {
-  console.log("User connected:", socket.id);
-
-  socket.on("join", (roomID) => {
-    socket.join(roomID);
-    socket.to(roomID).emit("user-joined", socket.id);
+const io = require("socket.io")(server, {
+    cors: {
+      origin: "*", // or specify your frontend domain
+      methods: ["GET", "POST"],
+    },
   });
 
-  socket.on("signal", ({ roomID, signal, to }) => {
-    io.to(to).emit("signal", { from: socket.id, signal });
-  });
+  const rooms = {};
 
-  socket.on("disconnect", () => {
-    socket.broadcast.emit("user-left", socket.id);
+  io.on("connection", (socket) => {
+    socket.on("join", (roomID) => {
+      if (!rooms[roomID]) rooms[roomID] = [];
+      rooms[roomID].push(socket.id);
+  
+      const otherUsers = rooms[roomID].filter(id => id !== socket.id);
+      socket.join(roomID);
+      
+      // Send list of existing users to the new user
+      socket.emit("all-users", otherUsers);
+  
+      // Notify others that a new user joined
+      socket.to(roomID).emit("user-joined", socket.id);
+  
+      socket.on("signal", ({ to, from, signal }) => {
+        io.to(to).emit("signal", { from, signal });
+      });
+  
+      socket.on("disconnect", () => {
+        rooms[roomID] = rooms[roomID].filter(id => id !== socket.id);
+        socket.to(roomID).emit("user-disconnected", socket.id);
+      });
+    });
   });
-});
 
 const PORT = process.env.PORT || 5000;
 server.listen(PORT, () => {
