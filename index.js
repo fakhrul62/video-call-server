@@ -1,20 +1,25 @@
-// server/index.js
 const express = require("express");
 const http = require("http");
-const cors = require("cors");
 const { Server } = require("socket.io");
+const cors = require("cors");
 
 const app = express();
-app.use(cors());
+
+// Allow all origins for now (you can restrict this to your frontend domain later for security)
+app.use(cors({ origin: "*" }));
+
 const server = http.createServer(app);
 
 const io = new Server(server, {
   cors: {
-    origin: "*",
+    origin: "*",  // Allow all origins for development
+    methods: ["GET", "POST"],
   },
 });
 
 io.on("connection", (socket) => {
+  console.log("User connected:", socket.id);
+
   socket.on("join", (roomID) => {
     socket.join(roomID);
     socket.to(roomID).emit("user-joined", socket.id);
@@ -30,4 +35,6 @@ io.on("connection", (socket) => {
 });
 
 const PORT = process.env.PORT || 5000;
-server.listen(PORT, () => console.log(`Server running on ${PORT}`));
+server.listen(PORT, () => {
+  console.log(`Server running on port ${PORT}`);
+});
