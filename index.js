@@ -9,6 +9,10 @@ const app = express();
 
 // Allow all origins for now (you can restrict this to your frontend domain later for security)
 app.use(cors({ origin: "*" }));
+app.get("/", (req, res) => {
+  res.send("Server is running.");
+});
+
 
 const server = http.createServer(app);
 
