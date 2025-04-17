@@ -36,8 +36,10 @@ const io = require("socket.io")(server, {
       socket.to(roomID).emit("user-joined", socket.id);
   
       socket.on("signal", ({ to, from, signal }) => {
+        console.log(`Forwarding signal from ${from} to ${to}`);
         io.to(to).emit("signal", { from, signal });
       });
+      
   
       socket.on("disconnect", () => {
         rooms[roomID] = rooms[roomID].filter(id => id !== socket.id);
